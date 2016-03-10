@@ -8,12 +8,36 @@ function getWhoNeedsAnzu()
   local afectedByPhantasmalCorruption = {};
   local countPhantasmalCorruption = 0;
   
-  local spellName0 = GetSpellInfo(181957); -- Vientos Fantasmales/Phantasmal Winds
-  local spellName1 = GetSpellInfo(182325); -- Heridas Fantasmales/Phantasmal Wounds
-  local spellName2 = GetSpellInfo(181753); -- Bomba vil/Fel Bomb
-  local spellName3 = GetSpellInfo(181824); -- Corrupción fantasmal/Phantasmal Corruption
+  local enumIskarBuffs = {
+    phantasmalWinds = 181957,
+    phantasmalWounds = 182325,
+    felBomb = 181753,
+    phantasmalCorruption = 181824,
+    eyeOfAnzu = 179202
+  }
   
-  local firstTank = nil;
+  local spellName0 = GetSpellInfo(enumIskarBuffs.phantasmalWinds); -- Vientos Fantasmales/Phantasmal Winds
+  local spellName1 = GetSpellInfo(enumIskarBuffs.phantasmalWounds); -- Heridas Fantasmales/Phantasmal Wounds
+  local spellName2 = GetSpellInfo(enumIskarBuffs.felBomb); -- Bomba vil/Fel Bomb
+  local spellName3 = GetSpellInfo(enumIskarBuffs.phantasmalCorruption); -- Corrupción fantasmal/Phantasmal Corruption
+  
+--  local firstTank = nil;
+  local raidIndex = UnitInRaid("player"); -- [1-40|nil]
+  local _, _, classIndex = UnitClass("player"); -- [1-11|0]
+  local enumClasses = {
+    none = 0,
+    warrior = 1,
+    paladin = 2,
+    hunter = 3,
+    rogue = 4,
+    priest = 5,
+    deathKnight = 6,
+    shaman = 7,
+    mage = 8,
+    warlock = 9,
+    monk = 10,
+    druid = 11
+  }
   
   for i = 1, GetNumGroupMembers() do 
     local _, _, _, _, _, _, _, _, _, _, aura_spellID0 = UnitAura("raid" .. i, spellName0, nil);
@@ -22,40 +46,70 @@ function getWhoNeedsAnzu()
     local _, _, _, _, _, _, _, _, _, _, aura_spellID3 = UnitAura("raid" .. i, spellName3, nil);
     local specID = GetInspectSpecialization('raid' .. i);
     local role = GetSpecializationRoleByID(specID);
-    if aura_spellID0 == 181957 then
-      table.insert(afectedByPhantasmalWinds, "raid" .. i);
+    if aura_spellID0 == enumIskarBuffs.phantasmalWinds then
+      if raidIndex == tostring(i) then
+        table.insert(afectedByPhantasmalWinds, "player");
+      else
+        table.insert(afectedByPhantasmalWinds, "raid" .. i);
+      end;
       countPhantasmalWinds += 1;
     end;
-    if aura_spellID1 == 182325 then
-      table.insert(afectedByPhantasmalWounds, "raid" .. i);
+    if aura_spellID1 == enumIskarBuffs.phantasmalWounds then
+      if raidIndex == tostring(i) then
+        table.insert(afectedByPhantasmalWounds, "player");
+      else
+        table.insert(afectedByPhantasmalWounds, "raid" .. i);
+      end;
       countPhantasmalWounds +=1;
     end;
-    if aura_spellID2 == 181753 && role == "HEALER" then
-      table.insert(afectedByFelBomb, "raid" .. i);
+    if aura_spellID2 == enumIskarBuffs.felBomb && role == "HEALER" then
+      if raidIndex == tostring(i) then
+        table.insert(afectedByFelBomb, "player");
+      else
+        table.insert(afectedByFelBomb, "raid" .. i);
+      end;
       countFelBomb += 1;
     end;
-    if aura_spellID3 == 181824 && role == "TANK" then
-      table.insert(afectedByPhantasmalCorruption, "raid" .. i);
+    if aura_spellID3 == enumIskarBuffs.phantasmalCorruption && role == "TANK" then
+      if raidIndex == tostring(i) then
+        table.insert(afectedByPhantasmalCorruption, "player");
+      else
+        table.insert(afectedByPhantasmalCorruption, "raid" .. i);
+      end;
       countPhantasmalCorruption += 1;
     end;
-    if firstTank == nil && role == "TANK" then
-      firstTank = "raid" .. i;
-    end;
+--    if firstTank == nil && role == "TANK" then
+--      if raidIndex == tostring(i) then
+--        firstTank = "player";
+--      else
+--        firstTank = "raid" .. i;
+--      end;
+--    end;
   end;
   
   if countFelBomb >= 1 then
-    return afectedByFelBomb[1], 181753, "HEALER";
+    if classIndex == enumClasses.druid then
+      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 88423;
+    elseif classIndex == enumClasses.priest then
+      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 527;
+    elseif classIndex == enumClasses.paladin then
+      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 4987;
+    elseif classIndex == enumClasses.shaman then
+      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 77130;
+    elseif classIndex == enumClasses.monk then
+      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 115450;
+    end;
   end;
   if countPhantasmalCorruption >= 1 then
-    return afectedByPhantasmalCorruption[1], 181824, "TANK";
+    return afectedByPhantasmalCorruption[1], enumIskarBuffs.phantasmalCorruption, "TANK", nil;
   end;
   if countPhantasmalWounds >= 1 then
-    return afectedByPhantasmalWounds[1], 182325, "ANY";
+    return afectedByPhantasmalWounds[1], enumIskarBuffs.phantasmalWounds, "ANY", nil;
   end;
   if countPhantasmalWinds >= 1 then
-    return afectedByPhantasmalWinds[1], 181957, "ANY";
+    return afectedByPhantasmalWinds[1], enumIskarBuffs.phantasmalWinds, "ANY", nil;
   end;
-  return "player", nil, "ANY";
+  return "player", nil, "ANY", nil;
 end;
 
 local anzu_name, _, anzu_icon = GetSpellInfo(179202); -- obtener el nombre del hechizo de ojo de anzu
@@ -80,11 +134,23 @@ local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTem
   btn:RegisterEvent('UNIT_AURA');
   function btn:UNIT_AURA(event, unit)
     if unit == "player" then
-      local spell_name = GetSpellInfo(179202);
+        local enumIskarBuffs = {
+          phantasmalWinds = 181957,
+          phantasmalWounds = 182325,
+          felBomb = 181753,
+          phantasmalCorruption = 181824,
+          eyeOfAnzu = 179202
+        }
+      local spell_name = GetSpellInfo(enumIskarBuffs.eyeOfAnzu);
       local aura_name, _, _, _, _, _, _, _, _, _, aura_spellID = UnitAura("player", spell_name, nil);
       if aura_name ~= nil then
-        target, spell, role = getWhoNeedsAnzu();
-        if target ~= "player" then
+        target, iskarSpell, role, dispellID = getWhoNeedsAnzu();
+        if target == "player" && iskarSpell == nil then
+          return;
+        elseif target == "player" && iskarSpell == enumIskarBuffs.felBomb && role == "HEALER" then
+          local dispellName = GetSpellInfo(dispellID);
+          self:SetAttribute("spell", dispellName, target);
+        elseif target ~= "player" then
           self:SetAttribute("spell", anzu_name, target);
         end; 
       end;
