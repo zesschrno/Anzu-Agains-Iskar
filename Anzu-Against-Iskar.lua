@@ -1,56 +1,3 @@
-local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTemplate,SecureHandlerStateTemplate,SecureHandlerAttributeTemplate")
-
-  local anzu_name, _, anzu_icon = GetSpellInfo(179202) -- obtener el nombre del hechizo de ojo de anzu
-  btn:SetMovable(true)
-  btn:SetSize(30,30)
-  --btn:SetScale(ExtraActionButton1:GetScale())
-  btn:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-  btn:SetHighlightTexture("Interface\Buttons\ButtonHilight-Square")
-  btn:SetNormalTexture(anzu_icon)
-  btn:Show()
-  
-  btn:SetScript('OnLoad', function(self)
-    print('Me estoy cargando')
-  end)
-  
-  btn:SetScript('OnShow', function(self)
-    print('Me estoy mostrando')
-  end)
-  btn:SetScript('OnEvent', function(self, event, ...)
-    if(self[event]) then
-      self[event](self, event, ...)
-    end
-  end)
-  
-  btn:RegisterEvent("PLAYER_LOGIN")
-  btn:RegisterEvent('UNIT_AURA')
-
-  function btn:UNIT_AURA(event, unit)
-    if unit == "player" then
-      local enumIskarBuffs = {
-        phantasmalWinds = 181957,
-        phantasmalWounds = 182325,
-        felBomb = 181753,
-        phantasmalCorruption = 181824,
-        eyeOfAnzu = 179202
-      }
-      local spell_name = GetSpellInfo(enumIskarBuffs.eyeOfAnzu)
-      local aura_name, _, _, _, _, _, _, _, _, _, aura_spellID = UnitAura("player", spell_name, nil)
-      if aura_name ~= nil then
-        self:SetAttribute("type", "spell")
-        local target, iskarSpell, role, dispellID = nil --getWhoNeedsAnzu()
-        if target == "player" and iskarSpell == nil then
-        elseif target == "player" and iskarSpell == enumIskarBuffs.felBomb and role == "HEALER" then
-          local dispellName = GetSpellInfo(dispellID)
-          self:SetAttribute("spell", dispellName, target)
-        elseif target ~= "player" then
-          self:SetAttribute("spell", anzu_name, target)
-        end
-      end
-    end
-  end
-  
-  
 function getWhoNeedsAnzu()
   local afectedByPhantasmalWinds = {}
   local countPhantasmalWinds = 0
@@ -60,6 +7,7 @@ function getWhoNeedsAnzu()
   local countFelBomb = 0
   local afectedByPhantasmalCorruption = {}
   local countPhantasmalCorruption = 0
+  local firstHealer = nil
   
   local enumIskarBuffs = {
     phantasmalWinds = 181957,
@@ -114,7 +62,7 @@ function getWhoNeedsAnzu()
       end
       countPhantasmalWounds = countPhantasmalWounds + 1
     end
-    if aura_spellID2 == enumIskarBuffs.felBomb and role == "HEALER" then
+    if aura_spellID2 == enumIskarBuffs.felBomb then
       if raidIndex == tostring(i) then
         table.insert(afectedByFelBomb, "player")
       else
@@ -130,20 +78,35 @@ function getWhoNeedsAnzu()
       end
       countPhantasmalCorruption = countPhantasmalCorruption + 1
     end
+    if firstHealer == nil
+      if role == "HEALER"
+        if raidIndex == tostring(i) then
+          firstHealer = "player"
+        else
+          firstHealer = "raid" .. i
+        end
+      end
+    end
   end
   
   if countFelBomb >= 1 then
-    if classIndex == enumClasses.druid then
-      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 88423
-    elseif classIndex == enumClasses.priest then
-      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 527
-    elseif classIndex == enumClasses.paladin then
-      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 4987
-    elseif classIndex == enumClasses.shaman then
-      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 77130
-    elseif classIndex == enumClasses.monk then
-      return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 115450
+    for key, value in pairs(afectedByFelBomb) do
+      if GetSpecializationRoleByID(GetInspectSpecialization(value)) == "HEALER" then
+        local _, _, classIndex = UnitClass(value);
+        if classIndex == enumClasses.druid then
+          return value, enumIskarBuffs.felBomb, "HEALER", 88423
+        elseif classIndex == enumClasses.priest then
+          return value, enumIskarBuffs.felBomb, "HEALER", 527
+        elseif classIndex == enumClasses.paladin then
+          return value, enumIskarBuffs.felBomb, "HEALER", 4987
+        elseif classIndex == enumClasses.shaman then
+          return value, enumIskarBuffs.felBomb, "HEALER", 77130
+        elseif classIndex == enumClasses.monk then
+          return value, enumIskarBuffs.felBomb, "HEALER", 115450
+        end
+      end
     end
+    return firstHealer, enumIskarBuffs.felBomb, "ANY", nil
   end
   if countPhantasmalCorruption >= 1 then
     return afectedByPhantasmalCorruption[1], enumIskarBuffs.phantasmalCorruption, "TANK", nil
@@ -156,3 +119,85 @@ function getWhoNeedsAnzu()
   end
   return "player", nil, "ANY", nil
 end
+
+local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTemplate,SecureHandlerStateTemplate,SecureHandlerAttributeTemplate")
+
+  local anzu_name, _, anzu_icon = GetSpellInfo(179202) -- obtener el nombre del hechizo de ojo de anzu
+  btn:SetMovable(true)
+  btn:SetSize(30,30)
+  --btn:SetScale(ExtraActionButton1:GetScale())
+  btn:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+  btn:SetHighlightTexture("Interface\Buttons\ButtonHilight-Square")
+  btn:SetNormalTexture(anzu_icon)
+  btn:Show()
+  
+  btn:SetScript('OnLoad', function(self)
+    print('Me estoy cargando')
+  end)
+  
+  btn:SetScript('OnShow', function(self)
+    print('Me estoy mostrando')
+  end)
+  
+  btn:RegisterEvent("PLAYER_LOGIN")
+  btn:RegisterEvent('UNIT_AURA')
+  
+  btn:SetScript('OnEvent', function(self, event, ...)
+    if(self[event]) then
+      self[event](self, event, ...)
+    end
+  end)
+
+  function btn:UNIT_AURA(event, unit)
+    if unit == "player" then
+      local enumIskarBuffs = {
+        phantasmalWinds = 181957,
+        phantasmalWounds = 182325,
+        felBomb = 181753,
+        phantasmalCorruption = 181824,
+        eyeOfAnzu = 179202
+      }
+      local spell_name = GetSpellInfo(enumIskarBuffs.eyeOfAnzu)
+      local aura_name, _, _, _, _, _, _, _, _, _, aura_spellID = UnitAura("player", spell_name, nil)
+      local target, iskarSpell, role, dispellID = getWhoNeedsAnzu()
+      if aura_name ~= nil then
+        if target == "player" and iskarSpell == nil then
+          self:SetAttribute("type", nil)
+          self:SetAttribute("spell", nil, nil)
+        elseif target == "player" and iskarSpell == enumIskarBuffs.felBomb and role == "HEALER" then
+          local dispellName, _, dispellIcon = GetSpellInfo(dispellID)
+          self:SetAttribute("type", "spell")
+          self:SetNormalTexture(dispellIcon)
+          self:SetAttribute("spell", dispellName, target)
+          self:SetAttribute("type", nil)
+          self:SetAttribute("spell", nil, nil)
+          self:SetNormalTexture(anzu_icon)
+        elseif target ~= "player" then
+          self:SetAttribute("target", target)
+          self:SetAttribute("type", "click")
+          self:SetAttribute("click", "ExtraActionButton1")
+          self:SetAttribute("target", nil)
+          self:SetAttribute("type", nil)
+          self:SetAttribute("click", nil)
+        end
+      end
+    end
+  end
+
+  --[[
+  function btn:UNIT_AURA(event, unit)
+    if unit == "player" then
+      print("aura")
+      local spell_name = GetSpellInfo(139)
+      print(spell_name)
+      local aura_name, _, _, _, _, _, _, _, _, _, aura_spellID = UnitAura("player", spell_name, nil)
+      print(aura_name)
+      if aura_name ~= nil then
+        local heal_name = GetSpellInfo(2061)
+        self:SetAttribute("spell", heal_name, "player")
+      else
+        self:SetAttribute("spell", nil, "player")
+      end
+    end
+  end
+  --]]
