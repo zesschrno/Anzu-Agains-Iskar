@@ -9,7 +9,8 @@ function getWhoNeedsAnzu()
   local countPhantasmalCorruption = 0
   local firstHealer = nil
   local _, _, playerClassIndex = UnitClass("player")
-  local playerSpec = GetSpecializationRoleByID(GetInspectSpecialization("player"))
+  local playerspID = GetInspectSpecialization("player")
+  local playerSpec = GetSpecializationRoleByID(playerspID)
   print("log1")
   local s0 = GetSpellInfo(181957)
   local s1 = GetSpellInfo(182325)
@@ -46,15 +47,16 @@ function getWhoNeedsAnzu()
   }
   print("log4")
   for i = 1, GetNumGroupMembers() do
-    local aura_spell0, _, _, _, _, _, _, _, _, _, aura_spellID0 = UnitAura("raid" .. i, enumIskarBuffs.phantasmalWinds, nil)
+    local aura_spell0, _, _, _, _, _, _, _, _, _, aura_spellID0 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalWinds)
     print("phantasmalWinds" .. aura_spellID0)
-    local aura_spell1, _, _, _, _, _, _, _, _, _, aura_spellID1 = UnitAura("raid" .. i, enumIskarBuffs.phantasmalWounds, nil)
+    local aura_spell1, _, _, _, _, _, _, _, _, _, aura_spellID1 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalWounds)
     print("phantasmalWounds" .. aura_spellID1)
-    local aura_spell2, _, _, _, _, _, _, _, _, _, aura_spellID2 = UnitAura("raid" .. i, enumIskarBuffs.felBomb, nil)
+    local aura_spell2, _, _, _, _, _, _, _, _, _, aura_spellID2 = UnitDebuff("raid" .. i, enumIskarBuffs.felBomb)
     print("felBomb" .. aura_spellID2)
-    local aura_spell3, _, _, _, _, _, _, _, _, _, aura_spellID3 = UnitAura("raid" .. i, enumIskarBuffs.phantasmalCorruption, nil)
+    local aura_spell3, _, _, _, _, _, _, _, _, _, aura_spellID3 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalCorruption)
     print("phantasmalCorruption" .. aura_spellID3)
-    local role = GetSpecializationRoleByID(GetInspectSpecialization('raid' .. i))
+    local rSpID = GetInspectSpecialization('raid' .. i)
+    local role = GetSpecializationRoleByID(rSpID)
     if aura_spell0 == enumIskarBuffs.phantasmalWinds then
       print("phantasmalWinds")
       if raidIndex == i then
@@ -121,7 +123,9 @@ function getWhoNeedsAnzu()
       end
     else
       for key, value in pairs(afectedByFelBomb) do
-        if GetSpecializationRoleByID(GetInspectSpecialization(value)) == "HEALER" then
+        local vSpID = GetInspectSpecialization(value)
+        local vR = GetSpecializationRoleByID(vSpID)
+        if vR == "HEALER" then
           if value ~= "player" then
             return value, enumIskarBuffs.felBomb, "ANY", nil
           end
