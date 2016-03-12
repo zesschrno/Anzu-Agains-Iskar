@@ -10,23 +10,26 @@ function getWhoNeedsAnzu()
   local firstHealer = nil
   local _, _, playerClassIndex = UnitClass("player")
   local playerSpec = GetSpecializationRoleByID(GetInspectSpecialization("player"))
-  
+  print("log1")
+  local s0 = GetSpellInfo(181957)
+  local s1 = GetSpellInfo(182325)
+  local s2 = GetSpellInfo(181753)
+  local s3 = GetSpellInfo(181824)
+  local s4 = GetSpellInfo(179202)
   local enumIskarBuffs = {
-    phantasmalWinds = 181957,
-    phantasmalWounds = 182325,
-    felBomb = 181753,
-    phantasmalCorruption = 181824,
-    eyeOfAnzu = 179202
+    phantasmalWinds = s0, -- Vientos Fantasmales/Phantasmal Winds
+    phantasmalWounds = s1, -- Heridas Fantasmales/Phantasmal Wounds
+    felBomb = s2, -- Bomba vil/Fel Bomb
+    phantasmalCorruption = s3, -- Corrupción fantasmal/Phantasmal Corruption
+    eyeOfAnzu = s4 -- Ojo de Anzu/Eye of Anzu
   }
+  print("log2")
   
-  local spellName0 = GetSpellInfo(enumIskarBuffs.phantasmalWinds) -- Vientos Fantasmales/Phantasmal Winds
-  local spellName1 = GetSpellInfo(enumIskarBuffs.phantasmalWounds) -- Heridas Fantasmales/Phantasmal Wounds
-  local spellName2 = GetSpellInfo(enumIskarBuffs.felBomb) -- Bomba vil/Fel Bomb
-  local spellName3 = GetSpellInfo(enumIskarBuffs.phantasmalCorruption) -- Corrupción fantasmal/Phantasmal Corruption
-  local spellName4 = GetSpellInfo(enumIskarBuffs.eyeOfAnzu) -- Ojo de Anzu/Eye of Anzu
-
+  
+  
   local raidIndex = UnitInRaid("player") -- [1-40|nil]
   local _, _, classIndex = UnitClass("player") -- [1-11|0]
+  print("log3")
   local enumClasses = {
     none = 0,
     warrior = 1,
@@ -41,15 +44,19 @@ function getWhoNeedsAnzu()
     monk = 10,
     druid = 11
   }
-  
-  for i = 1, GetNumGroupMembers() do 
-    local _, _, _, _, _, _, _, _, _, _, aura_spellID0 = UnitAura("raid" .. i, spellName0, nil)
-    local _, _, _, _, _, _, _, _, _, _, aura_spellID1 = UnitAura("raid" .. i, spellName1, nil)
-    local _, _, _, _, _, _, _, _, _, _, aura_spellID2 = UnitAura("raid" .. i, spellName2, nil)
-    local _, _, _, _, _, _, _, _, _, _, aura_spellID3 = UnitAura("raid" .. i, spellName3, nil)
-    local specID = GetInspectSpecialization('raid' .. i)
-    local role = GetSpecializationRoleByID(specID)
-    if aura_spellID0 == enumIskarBuffs.phantasmalWinds then
+  print("log4")
+  for i = 1, GetNumGroupMembers() do
+    local aura_spell0, _, _, _, _, _, _, _, _, _, aura_spellID0 = UnitAura("raid" .. i, enumIskarBuffs.phantasmalWinds, nil)
+    print("phantasmalWinds" .. aura_spellID0)
+    local aura_spell1, _, _, _, _, _, _, _, _, _, aura_spellID1 = UnitAura("raid" .. i, enumIskarBuffs.phantasmalWounds, nil)
+    print("phantasmalWounds" .. aura_spellID1)
+    local aura_spell2, _, _, _, _, _, _, _, _, _, aura_spellID2 = UnitAura("raid" .. i, enumIskarBuffs.felBomb, nil)
+    print("felBomb" .. aura_spellID2)
+    local aura_spell3, _, _, _, _, _, _, _, _, _, aura_spellID3 = UnitAura("raid" .. i, enumIskarBuffs.phantasmalCorruption, nil)
+    print("phantasmalCorruption" .. aura_spellID3)
+    local role = GetSpecializationRoleByID(GetInspectSpecialization('raid' .. i))
+    if aura_spell0 == enumIskarBuffs.phantasmalWinds then
+      print("phantasmalWinds")
       if raidIndex == i then
         table.insert(afectedByPhantasmalWinds, "player")
       else
@@ -57,7 +64,8 @@ function getWhoNeedsAnzu()
       end
       countPhantasmalWinds = countPhantasmalWinds + 1
     end
-    if aura_spellID1 == enumIskarBuffs.phantasmalWounds then
+    if aura_spell1 == enumIskarBuffs.phantasmalWounds then
+      print("phantasmalWounds")
       if raidIndex == i then
         table.insert(afectedByPhantasmalWounds, "player")
       else
@@ -65,7 +73,8 @@ function getWhoNeedsAnzu()
       end
       countPhantasmalWounds = countPhantasmalWounds + 1
     end
-    if aura_spellID2 == enumIskarBuffs.felBomb then
+    if aura_spell2 == enumIskarBuffs.felBomb then
+      print("felBomb")
       if raidIndex == i then
         table.insert(afectedByFelBomb, "player")
       else
@@ -73,7 +82,8 @@ function getWhoNeedsAnzu()
       end
       countFelBomb = countFelBomb + 1
     end
-    if aura_spellID3 == enumIskarBuffs.phantasmalCorruption and role == "TANK" then
+    if aura_spell3 == enumIskarBuffs.phantasmalCorruption and role == "TANK" then
+      print("phantasmalCorruption")
       if raidIndex == i then
         table.insert(afectedByPhantasmalCorruption, "player")
       else
@@ -91,10 +101,11 @@ function getWhoNeedsAnzu()
       end
     end
   end
-  
+  print("Pre-retorno de valores")
   if countFelBomb >= 1 then
-    local _, _, _, _, _, _, _, _, _, _, aura_spellID = UnitAura("player", spellName4, nil)
-    if aura_spellID ~= nil then
+    print("countFelBomb")
+    local anzuAuraName = UnitAura("player", enumIskarBuffs.eyeOfAnzu, nil)
+    if anzuAuraName ~= nil then
       if playerSpec == "HEALER" then
         if playerClassIndex == enumClasses.druid then
           return afectedByFelBomb[1], enumIskarBuffs.felBomb, "HEALER", 88423
@@ -120,14 +131,18 @@ function getWhoNeedsAnzu()
     return firstHealer, enumIskarBuffs.felBomb, "ANY", nil
   end
   if countPhantasmalCorruption >= 1 then
+    print("countPhantasmalCorruption")
     return afectedByPhantasmalCorruption[1], enumIskarBuffs.phantasmalCorruption, "TANK", nil
   end
   if countPhantasmalWounds >= 1 then
+    print("countPhantasmalWounds")
     return afectedByPhantasmalWounds[1], enumIskarBuffs.phantasmalWounds, "ANY", nil
   end
   if countPhantasmalWinds >= 1 then
+    print("countPhantasmalWinds")
     return afectedByPhantasmalWinds[1], enumIskarBuffs.phantasmalWinds, "ANY", nil
   end
+    print("default return")
   return "player", nil, "ANY", nil
 end
 
@@ -167,15 +182,19 @@ local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTem
 
   function btn:UNIT_AURA(event, unit)
     if unit == "player" then
+      local s0 = GetSpellInfo(181957)
+      local s1 = GetSpellInfo(182325)
+      local s2 = GetSpellInfo(181753)
+      local s3 = GetSpellInfo(181824)
+      local s4 = GetSpellInfo(179202)
       local enumIskarBuffs = {
-        phantasmalWinds = 181957,
-        phantasmalWounds = 182325,
-        felBomb = 181753,
-        phantasmalCorruption = 181824,
-        eyeOfAnzu = 179202
+        phantasmalWinds = s0, -- Vientos Fantasmales/Phantasmal Winds
+        phantasmalWounds = s1, -- Heridas Fantasmales/Phantasmal Wounds
+        felBomb = s2, -- Bomba vil/Fel Bomb
+        phantasmalCorruption = s3, -- Corrupción fantasmal/Phantasmal Corruption
+        eyeOfAnzu = s4 -- Ojo de Anzu/Eye of Anzu
       }
-      local spell_name = GetSpellInfo(enumIskarBuffs.eyeOfAnzu)
-      local aura_name, _, _, _, _, _, _, _, _, _, aura_spellID = UnitAura("player", spell_name, nil)
+      local aura_name, _, _, _, _, _, _, _, _, _, aura_spellID = UnitAura("player", enumIskarBuffs.eyeOfAnzu, nil)
       if aura_name ~= nil then
         print("tengo el ojo")
         local target, iskarSpell, role, dispellID = getWhoNeedsAnzu()
@@ -189,7 +208,7 @@ local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTem
           self:SetAttribute("spell", nil, nil)
           self:SetNormalTexture(anzu_icon)
         elseif target ~= "player" then
-          TargetUnit(target);
+          TargetUnit(target)
           self:SetAttribute("target", target)
           self:SetAttribute("type", "click")
           self:SetAttribute("click", "ExtraActionButton1")
