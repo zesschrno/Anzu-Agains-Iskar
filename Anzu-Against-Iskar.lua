@@ -11,26 +11,17 @@ function getWhoNeedsAnzu()
   local _, _, playerClassIndex = UnitClass("player")
   local playerspID = GetInspectSpecialization("player")
   local playerSpec = GetSpecializationRoleByID(playerspID)
-  print("log1")
-  local s0 = GetSpellInfo(181957)
-  local s1 = GetSpellInfo(182325)
-  local s2 = GetSpellInfo(181753)
-  local s3 = GetSpellInfo(181824)
-  local s4 = GetSpellInfo(179202)
+
   local enumIskarBuffs = {
-    phantasmalWinds = s0, -- Vientos Fantasmales/Phantasmal Winds
-    phantasmalWounds = s1, -- Heridas Fantasmales/Phantasmal Wounds
-    felBomb = s2, -- Bomba vil/Fel Bomb
-    phantasmalCorruption = s3, -- Corrupción fantasmal/Phantasmal Corruption
-    eyeOfAnzu = s4 -- Ojo de Anzu/Eye of Anzu
+    phantasmalWinds = GetSpellInfo(181957), -- Vientos Fantasmales/Phantasmal Winds
+    phantasmalWounds = GetSpellInfo(182325), -- Heridas Fantasmales/Phantasmal Wounds
+    felBomb = GetSpellInfo(181753), -- Bomba vil/Fel Bomb
+    phantasmalCorruption = GetSpellInfo(181824), -- Corrupción fantasmal/Phantasmal Corruption
+    eyeOfAnzu = GetSpellInfo(179202) -- Ojo de Anzu/Eye of Anzu
   }
-  print("log2")
-  
-  
   
   local raidIndex = UnitInRaid("player") -- [1-40|nil]
   local _, _, classIndex = UnitClass("player") -- [1-11|0]
-  print("log3")
   local enumClasses = {
     none = 0,
     warrior = 1,
@@ -45,19 +36,20 @@ function getWhoNeedsAnzu()
     monk = 10,
     druid = 11
   }
-  print("log4")
+
   for i = 1, GetNumGroupMembers() do
-    local aura_spell0, _, _, _, _, _, _, _, _, _, aura_spellID0 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalWinds)
-    print("phantasmalWinds" .. aura_spellID0)
-    local aura_spell1, _, _, _, _, _, _, _, _, _, aura_spellID1 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalWounds)
-    print("phantasmalWounds" .. aura_spellID1)
-    local aura_spell2, _, _, _, _, _, _, _, _, _, aura_spellID2 = UnitDebuff("raid" .. i, enumIskarBuffs.felBomb)
-    print("felBomb" .. aura_spellID2)
-    local aura_spell3, _, _, _, _, _, _, _, _, _, aura_spellID3 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalCorruption)
-    print("phantasmalCorruption" .. aura_spellID3)
+    print("entro" .. i)
+    local aura_spell0 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalWinds)
+    print("phantasmalWinds" .. aura_spell0)
+    local aura_spell1 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalWounds)
+    print("phantasmalWounds" .. aura_spell1)
+    local aura_spell2 = UnitDebuff("raid" .. i, enumIskarBuffs.felBomb)
+    print("felBomb" .. aura_spell2)
+    local aura_spell3 = UnitDebuff("raid" .. i, enumIskarBuffs.phantasmalCorruption)
+    print("phantasmalCorruption" .. aura_spell3)
     local rSpID = GetInspectSpecialization('raid' .. i)
     local role = GetSpecializationRoleByID(rSpID)
-    if aura_spell0 == enumIskarBuffs.phantasmalWinds then
+    if aura_spell0 ~= nil then
       print("phantasmalWinds")
       if raidIndex == i then
         table.insert(afectedByPhantasmalWinds, "player")
@@ -66,7 +58,7 @@ function getWhoNeedsAnzu()
       end
       countPhantasmalWinds = countPhantasmalWinds + 1
     end
-    if aura_spell1 == enumIskarBuffs.phantasmalWounds then
+    if aura_spell1 ~= nil then
       print("phantasmalWounds")
       if raidIndex == i then
         table.insert(afectedByPhantasmalWounds, "player")
@@ -75,7 +67,7 @@ function getWhoNeedsAnzu()
       end
       countPhantasmalWounds = countPhantasmalWounds + 1
     end
-    if aura_spell2 == enumIskarBuffs.felBomb then
+    if aura_spell2 ~= nil then
       print("felBomb")
       if raidIndex == i then
         table.insert(afectedByFelBomb, "player")
@@ -84,7 +76,7 @@ function getWhoNeedsAnzu()
       end
       countFelBomb = countFelBomb + 1
     end
-    if aura_spell3 == enumIskarBuffs.phantasmalCorruption and role == "TANK" then
+    if aura_spell3 ~= nil and role == "TANK" then
       print("phantasmalCorruption")
       if raidIndex == i then
         table.insert(afectedByPhantasmalCorruption, "player")
@@ -168,11 +160,11 @@ local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTem
   btn:SetScript('OnShow', function(self)
     print('Me estoy mostrando')
   end)
-  btn:SetScript("OnDragStart", function(self)
-    self.StartMoving()
+  btn:SetScript("OnDragStart", function(self, button)
+    self:StartMoving()
   end)
   btn:SetScript("OnDragStop", function(self)
-    self.StopMovingOrSizing()
+    self:StopMovingOrSizing()
   end)
   
   btn:RegisterEvent("PLAYER_LOGIN")
@@ -186,19 +178,14 @@ local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTem
 
   function btn:UNIT_AURA(event, unit)
     if unit == "player" then
-      local s0 = GetSpellInfo(181957)
-      local s1 = GetSpellInfo(182325)
-      local s2 = GetSpellInfo(181753)
-      local s3 = GetSpellInfo(181824)
-      local s4 = GetSpellInfo(179202)
       local enumIskarBuffs = {
-        phantasmalWinds = s0, -- Vientos Fantasmales/Phantasmal Winds
-        phantasmalWounds = s1, -- Heridas Fantasmales/Phantasmal Wounds
-        felBomb = s2, -- Bomba vil/Fel Bomb
-        phantasmalCorruption = s3, -- Corrupción fantasmal/Phantasmal Corruption
-        eyeOfAnzu = s4 -- Ojo de Anzu/Eye of Anzu
+        phantasmalWinds = GetSpellInfo(181957), -- Vientos Fantasmales/Phantasmal Winds
+        phantasmalWounds = GetSpellInfo(182325), -- Heridas Fantasmales/Phantasmal Wounds
+        felBomb = GetSpellInfo(181753), -- Bomba vil/Fel Bomb
+        phantasmalCorruption = GetSpellInfo(181824), -- Corrupción fantasmal/Phantasmal Corruption
+        eyeOfAnzu = GetSpellInfo(179202) -- Ojo de Anzu/Eye of Anzu
       }
-      local aura_name, _, _, _, _, _, _, _, _, _, aura_spellID = UnitAura("player", enumIskarBuffs.eyeOfAnzu, nil)
+      local aura_name = UnitAura("player", enumIskarBuffs.eyeOfAnzu, nil)
       if aura_name ~= nil then
         print("tengo el ojo")
         local target, iskarSpell, role, dispellID = getWhoNeedsAnzu()
@@ -208,18 +195,18 @@ local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTem
           self:SetAttribute("type", "spell")
           self:SetNormalTexture(dispellIcon)
           self:SetAttribute("spell", dispellName, target)
-          self:SetAttribute("type", nil)
-          self:SetAttribute("spell", nil, nil)
-          self:SetNormalTexture(anzu_icon)
         elseif target ~= "player" then
           TargetUnit(target)
           self:SetAttribute("target", target)
           self:SetAttribute("type", "click")
           self:SetAttribute("click", "ExtraActionButton1")
-          self:SetAttribute("target", nil)
-          self:SetAttribute("type", nil)
-          self:SetAttribute("click", nil)
         end
+      else
+        self:SetNormalTexture(anzu_icon)
+        self:SetAttribute("type", nil)
+        self:SetAttribute("spell", nil, nil)
+        self:SetAttribute("target", nil)
+        self:SetAttribute("click", nil)
       end
     end
   end
