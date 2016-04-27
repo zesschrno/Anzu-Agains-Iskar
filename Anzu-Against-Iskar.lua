@@ -179,6 +179,7 @@ local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTem
       if aura_name ~= nil then
         print("tengo el ojo")
         local target, iskarSpell, role, dispellID = getWhoNeedsAnzu()
+        local targetName = UnitName(target)
         print("El objetivo es " .. target .. " con el bufo " .. iskarSpell)
         if iskarSpell == enumIskarBuffs.felBomb and role == "HEALER" then
           local dispellName, _, dispellIcon = GetSpellInfo(dispellID)
@@ -187,7 +188,7 @@ local btn = CreateFrame("Button", "AnzuButton", UIParent, "SecureActionButtonTem
           self:SetAttribute("spell", dispellName, target)
         elseif target ~= "player" then
           self:SetAttribute("type", "macro")
-          self:SetAttribute("macrotext", string.format("/target %s\n/click ExtraActionButton1\n/targetlasttarget", target))
+          self:SetAttribute("macrotext", string.format("/targetexact %s\n/click ExtraActionButton1\n/targetlasttarget", targetName))
         end
       else
         self:SetNormalTexture(anzu_icon)
